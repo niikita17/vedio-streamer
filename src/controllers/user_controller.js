@@ -1,4 +1,4 @@
-import User from "../models/user_model.js"
+import {User} from "../models/user_model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from 'jsonwebtoken'
 
@@ -13,22 +13,31 @@ const { fullname,username, email, password}=req.body;
   if(existeduser){
     return res.status(409).json({msg:"user already existed"});
   }
+  const avatarLocalPath = req.files?.avatar[0]?.path;
+    //const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
-    const avatarLocalPath=req.files ?.avatar[0]?.path;
-    const coverImageLocalPath=req.files?.coverImage[0]?.path;
-  if(!avatarLocalPath)
-    return res.status(400).json({msg:"Avatr file is required"})
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+    
 
- const Avatar= await uploadOnCloudinary(avatarLocalPath)
- if(!Avatar)
-        return res.status(400).json({msg:"Avatr file is required"})
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is required")
+    }
 
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    if (!avatar) {
+        throw new ApiError(400, "Avatar file is required")
+    }
  const user=await User.create({
     fullname,
     email,
     username,
     password,
-    avatar:Avatar.url,
+    avatar:avatar.url,
 
  });
  user.save();
@@ -65,7 +74,7 @@ const loginUser = async (req, res) =>{
     console.log(email);
 
     if (!username && !email) {
-        throw new ApiError(400, "username or email is required")
+        return res.status(400).json({msg: "username or email is required"})
     }
     
     // Here is an alternative of above code based on logic discussed in video:
@@ -79,16 +88,16 @@ const loginUser = async (req, res) =>{
     })
 
     if (!user) {
-        throw new ApiError(404, "User does not exist")
+        return res.status(404).json({msg: "user does not exist"})
     }
 
    const isPasswordValid = await user.isPasswordCorrect(password)
 
    if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials")
+        return res.status(400).json({msg: "Invalid credentials"})
     }
 
-   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id);
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
@@ -104,7 +113,7 @@ const loginUser = async (req, res) =>{
     .json({msg:"User logged In Successfully"})
 
 }
-const logoutUser = asyncHandler(async(req, res) => {
+const logoutUser = async(req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -127,7 +136,7 @@ const logoutUser = asyncHandler(async(req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json({msg: "User logged Out"})
-})
+}
 
 const refreshAccessToken=async(req,res)=>{
     const incomingtoken=res.cookies.refreshToken ||res.body.refreshToken;
@@ -154,7 +163,7 @@ return res
 }
 
 
-const changeCurrentPassword = asyncHandler(async(req, res) => {
+const changeCurrentPassword = async(req, res) => {
     const {oldPassword, newPassword} = req.body
 
     
@@ -168,28 +177,22 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
     user.password = newPassword
     await user.save({validateBeforeSave: false})
+    return res.status(200).json({msg:"password changed sucessfully"});
 
-    return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"))
-})
+}
 
 
-const getCurrentUser = asyncHandler(async(req, res) => {
-    return res
-    .status(200)
-    .json(new ApiResponse(
-        200,
-        req.user,
-        "User fetched successfully"
-    ))
-})
+const getCurrentUser = async(req, res) => {
+       return res.status(200).json({msg:"user fetched sucessfully"});
 
-const updateAccountDetails = asyncHandler(async(req, res) => {
+}
+
+const updateAccountDetails = async(req, res) => {
     const {fullName, email} = req.body
 
     if (!fullName || !email) {
-        throw new ApiError(400, "All fields are required")
+           return res.status(400).json({msg:"all fields are required"});
+
     }
 
     const user = await User.findByIdAndUpdate(
@@ -204,16 +207,15 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
         
     ).select("-password")
 
-    return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"))
-});
+       return res.status(200).json({msg:"acount details updated sucessfully"});
 
-const updateUserAvatar = asyncHandler(async(req, res) => {
+};
+
+const updateUserAvatar =async(req, res) => {
     const avatarLocalPath = req.file?.path
 
     if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is missing")
+    return res.status(400).json({msg:"avatar file is missing"});
     }
 
     //TODO: delete old image - assignment
@@ -221,7 +223,8 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if (!avatar.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+           return res.status(400).json({msg:"error during uploading file"});
+
         
     }
 
@@ -235,18 +238,16 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
         {new: true}
     ).select("-password")
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, user, "Avatar image updated successfully")
-    )
-})
+       return res.status(200).json({msg:"avatr image updated sucessfully"});
 
-const updateUserCoverImage = asyncHandler(async(req, res) => {
+}
+
+const updateUserCoverImage =async(req, res) => {
     const coverImageLocalPath = req.file?.path
 
     if (!coverImageLocalPath) {
-        throw new ApiError(400, "Cover image file is missing")
+           return res.status(400).json({msg:"cover image is missing"});
+
     }
 
     //TODO: delete old image - assignment
@@ -255,7 +256,8 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
     if (!coverImage.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+            return res.status(400).json({msg:"error while uploading cover image "});
+
         
     }
 
@@ -272,16 +274,17 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, user, "Cover image updated successfully")
+     user,{msg: "Cover image updated successfully"}
     )
-})
+}
 
 
-const getUserChannelProfile = asyncHandler(async(req, res) => {
+const getUserChannelProfile =async(req, res) => {
     const {username} = req.params
 
     if (!username?.trim()) {
-        throw new ApiError(400, "username is missing")
+            return res.status(400).json({msg:"user name is missing"});
+
     }
 
     const channel = await User.aggregate([
@@ -339,17 +342,18 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
     ])
 
     if (!channel?.length) {
-        throw new ApiError(404, "channel does not exists")
+           return res.status(404).json({msg:"channel doesn't exist"});
+
     }
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200, channel[0], "User channel fetched successfully")
-    )
-})
+       channel[0], {msg:"User channel fetched successfully"})
+    
+}
 
-const getWatchHistory = asyncHandler(async(req, res) => {
+const getWatchHistory = async(req, res) => {
     const user = await User.aggregate([
         {
             $match: {
@@ -395,13 +399,12 @@ const getWatchHistory = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(
-            200,
+        
             user[0].watchHistory,
-            "Watch history fetched successfully"
+          { msg: "Watch history fetched successfully"}
         )
-    )
-})
+    
+}
 
 
 export {

@@ -1,14 +1,14 @@
 import express from "express";
-import connectDB from "./db/connectdb";
+import connectDB from "./db/connectdb.js";
 import dotenv from "dotenv";
-import app from './app.js'
+import{ app} from './app.js'
 import userRouter from "./routes/user_route.js"
-dotenv.conf({
+dotenv.config({
   path: "./env",
 });
 
 
-app.use("/api/users");
+app.use("/api/users",userRouter);
 
 connectDB()
 .then(()=>{

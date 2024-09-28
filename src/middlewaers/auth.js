@@ -2,7 +2,7 @@
 import jwt from "jsonwebtoken"
 import { User } from "../models/user_model.js";
 
-export const verifyJWT = asyncHandler(async(req, _, next) => {
+export const verifyJWT = async(req, res, next) => {
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
         
@@ -26,4 +26,4 @@ export const verifyJWT = asyncHandler(async(req, _, next) => {
         return res.status(401).json({ msg: error.message || "Invaid access toekn"})
     }
     
-})
+}

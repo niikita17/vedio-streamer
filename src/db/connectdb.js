@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
-import { DB_name } from "../constants";
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(`${process.env.mongodb}/${DB_name}`);
+    await mongoose.connect(`${process.env.mongodb}/vedioStream`);
     console.log("database connected");
   } catch (error) {
     console.log("error: ", error);
