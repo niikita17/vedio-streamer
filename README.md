@@ -5,7 +5,4 @@ This project is a video subscription platform designed to handle user authentica
 4.	Cloud Storage Integration: The application integrates cloud services for storing large files such as videos and media assets, ensuring scalable storage for user-generated content.
 5.	User and Subscription Models: The system maintains detailed models for users, videos, and subscriptions, allowing for fine-tuned control over user accounts and their respective subscriptions.
 6.	API Endpoints: The application includes several API endpoints to handle user registration, authentication, subscription toggling, and file uploads (for videos and media files).
-To explore and test the API endpoints, you can use the provided Postman collection. It contains all the routes needed to interact with the platform, including routes for user authentication, subscription management, and media uploads.
-Download Postman Collection
-________________________________________
-This summary provides a detailed overview of the project and includes a link to the Postman collection, making it easy to test and interact with the API functionalities.
+
