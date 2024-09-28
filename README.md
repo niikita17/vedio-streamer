@@ -1,4 +1,4 @@
-This project is a video subscription platform designed to handle user authentication, subscription management, video uploads, and account management. The core features of the application include:
+This project is a video streamer platform designed to handle user authentication, subscription management, video uploads, and account management. The core features of the application include:
 1.	User Registration and Login: Users can register and log in to their accounts, where authentication is handled using secure access tokens. Refresh tokens are used to manage session expiry, and password security is ensured through hashing.
 2.	Subscription Management: Users have the ability to subscribe or unsubscribe to services, controlling their access to various videos. Subscriptions are managed through toggle mechanisms that update the user's status dynamically.
 3.	Video and Media Uploads: Users can upload video content, as well as manage their avatars and cover images. All file uploads, including videos and images, are stored securely on cloud storage.
